@@ -10,6 +10,7 @@ from light_classification.tl_classifier import TLClassifier
 import tf
 import cv2
 import yaml
+from scipy.spatial import KDTree
 
 STATE_COUNT_THRESHOLD = 3
 
@@ -21,6 +22,8 @@ class TLDetector(object):
         self.waypoints = None
         self.camera_image = None
         self.lights = []
+        self.waypoint_tree = None
+        self.waypoints_2d = None
 
         sub1 = rospy.Subscriber('/current_pose', PoseStamped, self.pose_cb)
         sub2 = rospy.Subscriber('/base_waypoints', Lane, self.waypoints_cb)
@@ -49,13 +52,50 @@ class TLDetector(object):
         self.last_wp = -1
         self.state_count = 0
 
-        rospy.spin()
+        self.loop()
+        #rospy.spin()
+
+    def loop(self):
+
+        rate = rospy.Rate(10)
+        while not rospy.is_shutdown():
+            if (self.pose):
+                light_wp, state = self.process_traffic_lights() # Detect and classify trafic light. Return light waypoint and state
+
+                '''
+                Publish upcoming red lights at camera frequency.
+                Each predicted state has to occur `STATE_COUNT_THRESHOLD` number
+                of times till we start using it. Otherwise the previous stable state is
+                used.
+                '''
+                # If state change
+                if self.state != state:
+                    self.state_count = 0 # Reset count
+                    self.state = state # Update state
+
+                elif self.state_count >= STATE_COUNT_THRESHOLD:
+                    self.last_state = self.state # Update last state
+                    light_wp = light_wp if state == TrafficLight.RED else -1 # If traffic light state is red, retun light waypoint to stop vehicle 
+                    self.last_wp = light_wp # Update light waypoint
+                    self.upcoming_red_light_pub.publish(Int32(light_wp)) # Publish light waypoint
+                else:
+                    self.upcoming_red_light_pub.publish(Int32(self.last_wp)) # Publish last waypoint (-1 or red light waypoint)
+
+                self.state_count += 1
+
+            rate.sleep()
+    
 
     def pose_cb(self, msg):
         self.pose = msg
 
     def waypoints_cb(self, waypoints):
         self.waypoints = waypoints
+        if not self.waypoints_2d:
+            self.waypoints_2d = [[waypoint.pose.pose.position.x, waypoint.pose.pose.position.y] for waypoint in waypoints.waypoints]
+            self.waypoint_tree = KDTree(self.waypoints_2d)
+        #rospy.logwarn("Tl detector: Recieved waypoints. Ready.{}".format(waypoints))
+        rospy.logwarn("Tl detector: Recieved waypoints. Ready.")
 
     def traffic_cb(self, msg):
         self.lights = msg.lights
@@ -90,7 +130,7 @@ class TLDetector(object):
             self.upcoming_red_light_pub.publish(Int32(self.last_wp))
         self.state_count += 1
 
-    def get_closest_waypoint(self, pose):
+    def get_closest_waypoint(self, x, y):
         """Identifies the closest path waypoint to the given position
             https://en.wikipedia.org/wiki/Closest_pair_of_points_problem
         Args:
@@ -101,7 +141,7 @@ class TLDetector(object):
 
         """
         #TODO implement
-        closest_idx = self.waypoint_tree.query([x,y, 1])[1]
+        closest_idx = self.waypoint_tree.query([x,y], 1)[1]
         return closest_idx
 
     def get_light_state(self, light):
@@ -145,7 +185,7 @@ class TLDetector(object):
         diff = len(self.waypoints.waypoints)
         for i, light in enumerate(self.lights):
             # Get stopline waypoint index
-            light = stop_line_positions[i]
+            line = stop_line_positions[i]
             temp_wp_idx = self.get_closest_waypoint(line[0], line[1])
             # Fine closest stop line waypoint index
             d = temp_wp_idx - car_wp_idx
@@ -156,8 +196,7 @@ class TLDetector(object):
 
         if closest_light:
             state = self.get_light_state(closest_light)
-            return light_wp, state
-        self.waypoints = None
+            return line_wp_idx, state
         return -1, TrafficLight.UNKNOWN
 
 if __name__ == '__main__':
