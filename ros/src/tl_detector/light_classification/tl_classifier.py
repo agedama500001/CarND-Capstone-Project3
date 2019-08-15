@@ -38,7 +38,7 @@ class TLClassifier(object):
         target_image = origin_image.copy()
 
         det_image, results = self.yolo.detect_image(target_image)
-        det_image.save('/home/student/Desktop/workspace/Det{:0>4}.bmp'.format(
+        #det_image.save('/home/student/Desktop/workspace/Det{:0>4}.bmp'.format(
             self.frameCounter))
         #rospy.loginfo(det_image)
 
@@ -68,7 +68,7 @@ class TLClassifier(object):
                 s_image = tl_cv_image[:, : ,1]
                 v_image = tl_cv_image[:, :, 2]
 
-                cv2.imwrite('/home/student/Desktop/workspace/crop_h_{:0>8}.bmp'.format(self.frameCounter),h_image)
+                #cv2.imwrite('/home/student/Desktop/workspace/crop_h_{:0>8}.bmp'.format(self.frameCounter),h_image)
                 #cv2.imwrite('/home/student/Desktop/workspace/crop_s_{:0>8}.bmp'.format(self.frameCounter),s_image)
                 #cv2.imwrite('/home/student/Desktop/workspace/crop_v_{:0>8}.bmp'.format(self.frameCounter),v_image)
 
@@ -107,7 +107,7 @@ class TLClassifier(object):
                 #cv2.imwrite('/home/student/Desktop/workspace/redArea{:0>8}_{}_{:0>3}.bmp'.format(self.frameCounter, tl_state,red_area_h_mean),red_area_h_image)
                 #cv2.imwrite('/home/student/Desktop/workspace/yellowArea{:0>8}_{}_{:0>3}.bmp'.format(self.frameCounter, tl_state,yellow_area_h_mean),yellow_area_h_image)
                 #cv2.imwrite('/home/student/Desktop/workspace/greenArea{:0>8}_{}_{:0>3}.bmp'.format(self.frameCounter, tl_state,green_area_h_mean),green_area_h_image)
-                tl_image.save('/home/student/Desktop/workspace/crop{:}_{}_{:.0f}.bmp'.format(self.frameCounter, tl_state,red_area_h_mean))
+                #tl_image.save('/home/student/Desktop/workspace/crop{:}_{}_{:.0f}.bmp'.format(self.frameCounter, tl_state,red_area_h_mean))
 
                 self.frameCounter += 1
 
