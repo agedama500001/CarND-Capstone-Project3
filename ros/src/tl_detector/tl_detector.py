@@ -51,6 +51,7 @@ class TLDetector(object):
                 det_image.save('/home/student/Desktop/workspace/out{:0>8}.png'.format(self.frameCounter))
                 #cv2.imwrite('/home/student/Desktop/workspace/out{:0>8}.png'.format(self.frameCounter),det_image )
                 self.frameCounter += 1
+                
             rate.sleep()
 
 
