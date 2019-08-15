@@ -49,6 +49,7 @@ class TLDetector(object):
                 target_image = origin_image.copy()
 
                 det_image, results = self.yolo.detect_image(target_image)
+                det_image.save('/home/student/Desktop/workspace/DetDebug{:0>4}.png'.format(self.frameCounter))
                 #rospy.loginfo(det_image)
 
                 for ret in results:
@@ -77,7 +78,7 @@ class TLDetector(object):
                         s_image = tl_cv_image[:, : ,1]
                         v_image = tl_cv_image[:, :, 2]
 
-                        #cv2.imwrite('/home/student/Desktop/workspace/crop_h_{:0>8}.bmp'.format(self.frameCounter),h_image)
+                        cv2.imwrite('/home/student/Desktop/workspace/crop_h_Debug_{:0>4}.bmp'.format(self.frameCounter),h_image)
                         #cv2.imwrite('/home/student/Desktop/workspace/crop_s_{:0>8}.bmp'.format(self.frameCounter),s_image)
                         #cv2.imwrite('/home/student/Desktop/workspace/crop_v_{:0>8}.bmp'.format(self.frameCounter),v_image)
 

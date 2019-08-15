@@ -1,7 +1,37 @@
-This is the project repo for the final project of the Udacity Self-Driving Car Nanodegree: Programming a Real Self-Driving Car. For more information about the project, see the project introduction [here](https://classroom.udacity.com/nanodegrees/nd013/parts/6047fe34-d93c-4f50-8336-b70ef10cb4b2/modules/e1a23b06-329a-4684-a717-ad476f0d8dff/lessons/462c933d-9f24-42d3-8bdc-a08a5fc866e4/concepts/5ab4b122-83e6-436d-850f-9f4d26627fd9).
+# Project: Programming a Real Self-Driving Car
+This project was created by an individual.
 
-Please use **one** of the two installation options, either native **or** docker installation.
+## Project overview
+---
+### Project ROS architecture
+* The ROS architecture used in the project is shown below.   
+![ROS architecture](./imgs/final-project-ros-graph-v2.png "ROS architecture")
 
+### Modifications to the base project repository
+* I modified the following nodes according to the walkthrough.  
+(1) Waypoint Updater Node  
+　I made a modification to publish the waypoint that the loaded map dataset vehicle should run as / finalwaypoint.  
+(2) DBW None  
+　Modified twist_controller.py, yaw_controller.py, and dbw_node.py to control the vehicle according to the / twist command.  
+(3) Traffic Light Detection Node  
+　Modified to generate /traffic_waypoints that the vehicle should run according to the signal status.(tl_detector.py)　We implemented an algorithm that detects the signal from the front image and identifies the color state of the signal.(tl_classfier.py:See next paragraph)
+
+### Traffic Light detection and classfication
+* Traffic Light detection  
+ I used [keras-yolo3](https://github.com/qqwweee/keras-yolo3) provided by qqwweee for signal detection. An example of the detection result is shown below.  
+ ![Traffic light detection image (On simulator)](./imgs/Det0039.bmp "Traffic light detection image (On simulator)")  
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;fig.1  Traffic light detection image (On simulator)
+![Traffic light detection image (On realworld)](./imgs/DetDebug0024.png "Traffic light detection image (On realworld)")  
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;fig.2  Traffic light detection image (On realworld)
+  
+* Traffic Light classfication  
+　The detected signal area was cropped and converted to the HSV image space to determine which color of the signal was issued. As shown in the figure, when the signal is red, the H value is lower than that of the yellow or green region. 
+Otherwise, it was judged green.  
+  ![Traffic light classification result image](./imgs/writeup.png "Traffic light classification result image")   
+  &nbsp;&nbsp;&nbsp;&nbsp;fig.3 raffic light classification result image
+
+
+---
 ### Native Installation
 
 * Be sure that your workstation is running Ubuntu 16.04 Xenial Xerus or Ubuntu 14.04 Trusty Tahir. [Ubuntu downloads can be found here](https://www.ubuntu.com/download/desktop).
