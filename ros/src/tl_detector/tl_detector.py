@@ -13,6 +13,7 @@ import yaml
 from scipy.spatial import KDTree
 
 STATE_COUNT_THRESHOLD = 3
+DEBUG = False
 
 class TLDetector(object):
     def __init__(self):
@@ -37,7 +38,10 @@ class TLDetector(object):
         rely on the position of the light and the camera image to predict it.
         '''
         sub3 = rospy.Subscriber('/vehicle/traffic_lights', TrafficLightArray, self.traffic_cb)
-        sub6 = rospy.Subscriber('/image_color', Image, self.image_cb)
+        if not DEBUG:
+            sub6 = rospy.Subscriber('/image_color', Image, self.image_cb)
+        else:
+            sub6 = rospy.Subscriber('/image_raw', Image, self.image_cb)
 
         config_string = rospy.get_param("/traffic_light_config")
         self.config = yaml.load(config_string)
@@ -52,6 +56,8 @@ class TLDetector(object):
         self.last_state = TrafficLight.UNKNOWN
         self.last_wp = -1
         self.state_count = 0
+
+        self.frameCount = 0
 
         self.loop()
         #rospy.spin()
@@ -138,13 +144,24 @@ class TLDetector(object):
             int: ID of traffic light color (specified in styx_msgs/TrafficLight)
 
         """
+        rospy.logwarn("get light state")
+        if DEBUG:
+            self.has_image = True # Debug
 
         if(self.has_image):
             rospy.logwarn("Using camera data")
+            image_top = 216
+            image_left = 315
+
             cv_image = self.bridge.imgmsg_to_cv2(self.camera_image, "bgr8")
+            cv_image_crop = cv_image[image_top:image_top + 415*2, image_left:image_left + 415*2]
+            #cv2.imwrite("/home/student/Desktop/workspace/test{}.png".format(self.frameCount), cv_image)
+            #cv2.imwrite("/home/student/Desktop/workspace/test_crop{}.png".format(self.frameCount), cv_image_crop)
+            self.frameCount += 1
 
             #Get classification
-            return self.light_classifier.get_classification(cv_image)
+            return self.light_classifier.get_classification(cv_image_crop)
+            #return self.light_classifier.get_classification(cv_image)
         rospy.logwarn("Using simulator traffic light data")
         return light.state
 
@@ -159,6 +176,7 @@ class TLDetector(object):
         """
         closest_light = None
         line_wp_idx = None
+        rospy.logwarn("process_traffic_lights")
 
         # List of positions that correspond to the line to stop in front of for a given intersection
         stop_line_positions = self.config['stop_line_positions']
